@@ -2,7 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import http from "node:http";
 import net from "node:net";
-import { spawn, execFileSync } from "node:child_process";
+import { spawn } from "node:child_process";
+function runAsync(cmd, args, opts) { return new Promise((resolve) => { const p = spawn(cmd, args, opts); p.on("close", resolve); p.on("error", resolve); }); }
 import { setupOpenCodeAuth, startOpenCodeGateway, buildExtensionZip } from "./opencode-gateway.mjs";
 
 setupOpenCodeAuth();
@@ -124,9 +125,9 @@ srv.listen(publicPort, "0.0.0.0", () => {
   };
   try {
     console.log("[rakazo-cloud] Running database migrations...");
-    execFileSync("node", ["--enable-source-maps", "apps/api/dist/cli/migrate-database.js"], { cwd: "/app", env, stdio: "inherit" });
+    await runAsync("node", ["--enable-source-maps", "apps/api/dist/cli/migrate-database.js"], { cwd: "/app", env, stdio: "inherit" });
     console.log("[rakazo-cloud] Bootstrapping owner account...");
-    execFileSync("node", ["--enable-source-maps", "apps/api/dist/cli/bootstrap-owner.js"], { cwd: "/app", env, stdio: "inherit" });
+    await runAsync("node", ["--enable-source-maps", "apps/api/dist/cli/bootstrap-owner.js"], { cwd: "/app", env, stdio: "inherit" });
   } catch (e) {
     console.error("[rakazo-cloud] Migration/bootstrap warning:", e.message);
   }
